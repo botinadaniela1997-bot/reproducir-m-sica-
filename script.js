@@ -1,614 +1,376 @@
-// PinkWave Player - JavaScript
-class PinkWavePlayer {
+class NeonWavePlayer {
     constructor() {
-        this.musicPlaylist = [];
-        this.videoPlaylist = [];
-        this.currentMusicIndex = -1;
-        this.currentVideoIndex = -1;
+        this.audioContext = null;
+        this.analyser = null;
+        this.source = null;
         this.isPlaying = false;
-        this.isShuffle = false;
-        this.repeatMode = 0; // 0: off, 1: all, 2: one
+        this.isLooping = false;
+        this.currentTrack = null;
+        this.playlist = [];
 
         this.initElements();
         this.initEventListeners();
+        this.initAudioContext();
+        this.startVisualizations();
     }
 
     initElements() {
-        // Audio
         this.audioPlayer = document.getElementById('audioPlayer');
-        this.playBtn = document.getElementById('playBtn');
-        this.playIcon = document.getElementById('playIcon');
-        this.prevBtn = document.getElementById('prevBtn');
-        this.nextBtn = document.getElementById('nextBtn');
-        this.shuffleBtn = document.getElementById('shuffleBtn');
-        this.repeatBtn = document.getElementById('repeatBtn');
-        this.volumeSlider = document.getElementById('volumeSlider');
-        this.musicProgress = document.getElementById('musicProgress');
-        this.musicProgressFill = document.getElementById('musicProgressFill');
-        this.musicProgressThumb = document.getElementById('musicProgressThumb');
-        this.currentTimeEl = document.getElementById('currentTime');
-        this.durationEl = document.getElementById('duration');
-        this.trackTitle = document.getElementById('trackTitle');
-        this.trackArtist = document.getElementById('trackArtist');
-
-        // Video
-        this.videoPlayer = document.getElementById('videoPlayer');
-        this.videoOverlay = document.getElementById('videoOverlay');
-        this.bigPlayBtn = document.getElementById('bigPlayBtn');
-        this.videoPlayBtn = document.getElementById('videoPlayBtn');
-        this.videoPlayIcon = document.getElementById('videoPlayIcon');
-        this.videoPrevBtn = document.getElementById('videoPrevBtn');
-        this.videoNextBtn = document.getElementById('videoNextBtn');
-        this.videoMuteBtn = document.getElementById('videoMuteBtn');
-        this.videoVolumeSlider = document.getElementById('videoVolumeSlider');
-        this.videoProgress = document.getElementById('videoProgress');
-        this.videoProgressFill = document.getElementById('videoProgressFill');
-        this.videoCurrentTime = document.getElementById('videoCurrentTime');
-        this.videoDuration = document.getElementById('videoDuration');
-        this.fullscreenBtn = document.getElementById('fullscreenBtn');
-        this.videoVolumeIcon = document.getElementById('videoVolumeIcon');
-
-        // Navigation
-        this.navBtns = document.querySelectorAll('.nav-btn');
-        this.musicSection = document.getElementById('musicSection');
-        this.videoSection = document.getElementById('videoSection');
-
-        // Drop zones
-        this.musicDropZone = document.getElementById('musicDropZone');
-        this.musicInput = document.getElementById('musicInput');
-        this.videoDropZone = document.getElementById('videoDropZone');
-        this.videoInput = document.getElementById('videoInput');
-
-        // Playlist
-        this.playlistContainer = document.getElementById('playlist');
-        this.clearPlaylistBtn = document.getElementById('clearPlaylist');
+        this.transportPlay = document.getElementById('transportPlay');
+        this.transportStop = document.getElementById('transportStop');
+        this.transportRec = document.getElementById('transportRec');
+        this.transportLoop = document.getElementById('transportLoop');
+        this.timeCode = document.getElementById('timeCode');
+        this.bpmValue = document.getElementById('bpmValue');
+        this.playhead = document.getElementById('playhead');
+        this.synthPopup = document.getElementById('synthPopup');
+        this.synthClose = document.getElementById('synthClose');
+        this.oscCanvas = document.getElementById('oscCanvas');
+        this.spectrumCanvas = document.getElementById('spectrumCanvas');
+        this.trackHeaders = document.querySelectorAll('.track-header');
+        this.waveBtns = document.querySelectorAll('.wave-btn');
+        this.mixerTabs = document.querySelectorAll('.mixer-tab');
+        this.faders = document.querySelectorAll('.fader');
     }
 
     initEventListeners() {
-        // Navigation
-        this.navBtns.forEach(btn => {
-            btn.addEventListener('click', () => this.switchSection(btn.dataset.section));
+        // Transport controls
+        this.transportPlay.addEventListener('click', () => this.togglePlay());
+        this.transportStop.addEventListener('click', () => this.stop());
+        this.transportLoop.addEventListener('click', () => this.toggleLoop());
+
+        // Synth popup
+        this.synthClose.addEventListener('click', () => this.synthPopup.style.display = 'none');
+
+        // Track selection
+        this.trackHeaders.forEach(header => {
+            header.addEventListener('click', () => this.selectTrack(header));
         });
 
-        // Music drop zone
-        this.musicDropZone.addEventListener('click', () => this.musicInput.click());
-        this.musicDropZone.addEventListener('dragover', (e) => this.handleDragOver(e));
-        this.musicDropZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-        this.musicDropZone.addEventListener('drop', (e) => this.handleMusicDrop(e));
-        this.musicInput.addEventListener('change', (e) => this.handleMusicSelect(e));
+        // Wave selector
+        this.waveBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.selectWave(btn));
+        });
 
-        // Video drop zone
-        this.videoDropZone.addEventListener('click', () => this.videoInput.click());
-        this.videoDropZone.addEventListener('dragover', (e) => this.handleDragOver(e));
-        this.videoDropZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-        this.videoDropZone.addEventListener('drop', (e) => this.handleVideoDrop(e));
-        this.videoInput.addEventListener('change', (e) => this.handleVideoSelect(e));
+        // Mixer tabs
+        this.mixerTabs.forEach(tab => {
+            tab.addEventListener('click', () => this.selectMixerTab(tab));
+        });
 
-        // Music controls
-        this.playBtn.addEventListener('click', () => this.toggleMusicPlay());
-        this.prevBtn.addEventListener('click', () => this.playPrevious());
-        this.nextBtn.addEventListener('click', () => this.playNext());
-        this.shuffleBtn.addEventListener('click', () => this.toggleShuffle());
-        this.repeatBtn.addEventListener('click', () => this.toggleRepeat());
-        this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
-
-        // Music progress
-        this.musicProgress.addEventListener('click', (e) => this.seekMusic(e));
-        this.musicProgress.addEventListener('mousemove', (e) => this.updateProgressThumb(e));
+        // Faders
+        this.faders.forEach(fader => {
+            fader.addEventListener('input', () => this.updateFader(fader));
+        });
 
         // Audio events
-        this.audioPlayer.addEventListener('timeupdate', () => this.updateMusicProgress());
-        this.audioPlayer.addEventListener('loadedmetadata', () => this.updateMusicDuration());
-        this.audioPlayer.addEventListener('ended', () => this.handleMusicEnd());
-
-        // Video controls
-        this.bigPlayBtn.addEventListener('click', () => this.toggleVideoPlay());
-        this.videoPlayBtn.addEventListener('click', () => this.toggleVideoPlay());
-        this.videoOverlay.addEventListener('click', () => this.toggleVideoPlay());
-        this.videoPrevBtn.addEventListener('click', () => this.playVideoPrevious());
-        this.videoNextBtn.addEventListener('click', () => this.playVideoNext());
-        this.videoMuteBtn.addEventListener('click', () => this.toggleVideoMute());
-        this.videoVolumeSlider.addEventListener('input', (e) => this.setVideoVolume(e.target.value));
-        this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
-
-        // Video progress
-        this.videoProgress.addEventListener('click', (e) => this.seekVideo(e));
-
-        // Video events
-        this.videoPlayer.addEventListener('timeupdate', () => this.updateVideoProgress());
-        this.videoPlayer.addEventListener('loadedmetadata', () => this.updateVideoDuration());
-        this.videoPlayer.addEventListener('ended', () => this.handleVideoEnd());
-        this.videoPlayer.addEventListener('play', () => this.updateVideoPlayState(true));
-        this.videoPlayer.addEventListener('pause', () => this.updateVideoPlayState(false));
-
-        // Clear playlist
-        this.clearPlaylistBtn.addEventListener('click', () => this.clearPlaylist());
+        this.audioPlayer.addEventListener('timeupdate', () => this.updateTime());
+        this.audioPlayer.addEventListener('ended', () => this.onTrackEnd());
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+
+        // Drop zone
+        document.addEventListener('dragover', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => this.handleDrop(e));
+
+        // Animate meters
+        this.animateMeters();
     }
 
-    switchSection(section) {
-        this.navBtns.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.section === section);
-        });
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 256;
 
-        this.musicSection.classList.toggle('active', section === 'music');
-        this.videoSection.classList.toggle('active', section === 'video');
-    }
-
-    // Drag and Drop
-    handleDragOver(e) {
-        e.preventDefault();
-        e.currentTarget.classList.add('drag-over');
-    }
-
-    handleDragLeave(e) {
-        e.currentTarget.classList.remove('drag-over');
-    }
-
-    handleMusicDrop(e) {
-        e.preventDefault();
-        e.currentTarget.classList.remove('drag-over');
-        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/'));
-        this.addMusicFiles(files);
-    }
-
-    handleVideoDrop(e) {
-        e.preventDefault();
-        e.currentTarget.classList.remove('drag-over');
-        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('video/'));
-        this.addVideoFiles(files);
-    }
-
-    handleMusicSelect(e) {
-        const files = Array.from(e.target.files);
-        this.addMusicFiles(files);
-    }
-
-    handleVideoSelect(e) {
-        const files = Array.from(e.target.files);
-        this.addVideoFiles(files);
-    }
-
-    addMusicFiles(files) {
-        files.forEach(file => {
-            const track = {
-                file: file,
-                name: file.name.replace(/\.[^/.]+$/, ''),
-                url: URL.createObjectURL(file),
-                duration: 0
-            };
-            this.musicPlaylist.push(track);
-        });
-
-        this.updatePlaylistDisplay();
-
-        if (this.currentMusicIndex === -1 && this.musicPlaylist.length > 0) {
-            this.currentMusicIndex = 0;
-            this.loadMusic(0);
+            this.source = this.audioContext.createMediaElementSource(this.audioPlayer);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioContext.destination);
+        } catch (e) {
+            console.log('Audio context initialization:', e);
         }
     }
 
-    addVideoFiles(files) {
-        files.forEach(file => {
-            const video = {
-                file: file,
-                name: file.name.replace(/\.[^/.]+$/, ''),
-                url: URL.createObjectURL(file),
-                duration: 0
-            };
-            this.videoPlaylist.push(video);
-        });
-
-        this.updatePlaylistDisplay();
-
-        if (this.currentVideoIndex === -1 && this.videoPlaylist.length > 0) {
-            this.currentVideoIndex = 0;
-            this.loadVideo(0);
-        }
-    }
-
-    updatePlaylistDisplay() {
-        const allItems = [...this.musicPlaylist, ...this.videoPlaylist];
-
-        if (allItems.length === 0) {
-            this.playlistContainer.innerHTML = '<p class="empty-message">Arrastra archivos aquí</p>';
-            return;
-        }
-
-        this.playlistContainer.innerHTML = '';
-
-        this.musicPlaylist.forEach((track, index) => {
-            const item = this.createPlaylistItem(track, index, 'music');
-            this.playlistContainer.appendChild(item);
-        });
-
-        this.videoPlaylist.forEach((video, index) => {
-            const item = this.createPlaylistItem(video, index, 'video');
-            this.playlistContainer.appendChild(item);
-        });
-    }
-
-    createPlaylistItem(item, index, type) {
-        const div = document.createElement('div');
-        div.className = 'playlist-item';
-        if ((type === 'music' && index === this.currentMusicIndex) ||
-            (type === 'video' && index === this.currentVideoIndex)) {
-            div.classList.add('active');
-        }
-
-        div.innerHTML = `
-            <div class="playlist-item-icon">
-                ${type === 'music' ? `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"/>
-                        <circle cx="6" cy="18" r="3"/>
-                        <circle cx="18" cy="16" r="3"/>
-                    </svg>
-                ` : `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                `}
-            </div>
-            <div class="playlist-item-info">
-                <div class="playlist-item-title">${item.name}</div>
-            </div>
-        `;
-
-        div.addEventListener('click', () => {
-            if (type === 'music') {
-                this.currentMusicIndex = index;
-                this.loadMusic(index);
-                this.playMusic();
-            } else {
-                this.currentVideoIndex = index;
-                this.loadVideo(index);
-                this.playVideo();
-            }
-        });
-
-        return div;
-    }
-
-    // Music Player
-    loadMusic(index) {
-        if (index < 0 || index >= this.musicPlaylist.length) return;
-
-        const track = this.musicPlaylist[index];
-        this.audioPlayer.src = track.url;
-        this.trackTitle.textContent = track.name;
-        this.trackArtist.textContent = `PinkWave • Pista ${index + 1} de ${this.musicPlaylist.length}`;
-        this.updatePlaylistDisplay();
-    }
-
-    toggleMusicPlay() {
+    togglePlay() {
         if (this.isPlaying) {
-            this.pauseMusic();
+            this.pause();
         } else {
-            this.playMusic();
+            this.play();
         }
     }
 
-    playMusic() {
-        if (this.musicPlaylist.length === 0) return;
-        this.audioPlayer.play();
-        this.isPlaying = true;
-        this.updatePlayButton();
+    play() {
+        if (this.audioPlayer.src) {
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            this.audioPlayer.play();
+            this.isPlaying = true;
+            this.transportPlay.classList.add('active');
+            this.transportPlay.querySelector('svg').innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        }
     }
 
-    pauseMusic() {
+    pause() {
         this.audioPlayer.pause();
         this.isPlaying = false;
-        this.updatePlayButton();
+        this.transportPlay.classList.remove('active');
+        this.transportPlay.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
     }
 
-    updatePlayButton() {
-        if (this.isPlaying) {
-            this.playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-        } else {
-            this.playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    stop() {
+        this.audioPlayer.pause();
+        this.audioPlayer.currentTime = 0;
+        this.isPlaying = false;
+        this.transportPlay.classList.remove('active');
+        this.transportPlay.querySelector('svg').innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        this.updateTime();
+    }
+
+    toggleLoop() {
+        this.isLooping = !this.isLooping;
+        this.audioPlayer.loop = this.isLooping;
+        this.transportLoop.classList.toggle('active', this.isLooping);
+    }
+
+    selectTrack(header) {
+        this.trackHeaders.forEach(h => h.classList.remove('selected'));
+        header.classList.add('selected');
+    }
+
+    selectWave(btn) {
+        this.waveBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    selectMixerTab(tab) {
+        this.mixerTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+    }
+
+    updateFader(fader) {
+        const channel = fader.closest('.channel');
+        const meterL = channel.querySelector('.meter-l');
+        const meterR = channel.querySelector('.meter-r');
+        const value = fader.value / 100;
+
+        if (meterL) meterL.style.setProperty('--level', `${(1 - value) * 100}%`);
+        if (meterR) meterR.style.setProperty('--level', `${(1 - value) * 100}%`);
+    }
+
+    updateTime() {
+        const current = this.audioPlayer.currentTime;
+        const duration = this.audioPlayer.duration || 0;
+
+        const formatTime = (s) => {
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = Math.floor(s % 60);
+            const ms = Math.floor((s % 1) * 100);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}:${String(ms).padStart(2, '0')}`;
+        };
+
+        this.timeCode.textContent = formatTime(current);
+
+        // Update playhead
+        if (duration > 0) {
+            const percent = (current / duration) * 100;
+            this.playhead.style.left = `${percent}%`;
         }
     }
 
-    playPrevious() {
-        if (this.musicPlaylist.length === 0) return;
-
-        if (this.audioPlayer.currentTime > 3) {
-            this.audioPlayer.currentTime = 0;
-        } else {
-            this.currentMusicIndex = (this.currentMusicIndex - 1 + this.musicPlaylist.length) % this.musicPlaylist.length;
-            this.loadMusic(this.currentMusicIndex);
-            if (this.isPlaying) this.playMusic();
+    onTrackEnd() {
+        if (!this.isLooping) {
+            this.stop();
         }
     }
 
-    playNext() {
-        if (this.musicPlaylist.length === 0) return;
+    handleDrop(e) {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files).filter(f =>
+            f.type.startsWith('audio/') || f.type.startsWith('video/')
+        );
 
-        if (this.isShuffle) {
-            this.currentMusicIndex = Math.floor(Math.random() * this.musicPlaylist.length);
-        } else {
-            this.currentMusicIndex = (this.currentMusicIndex + 1) % this.musicPlaylist.length;
-        }
+        files.forEach(file => {
+            this.playlist.push({
+                file: file,
+                name: file.name,
+                url: URL.createObjectURL(file)
+            });
+        });
 
-        this.loadMusic(this.currentMusicIndex);
-        if (this.isPlaying) this.playMusic();
-    }
-
-    toggleShuffle() {
-        this.isShuffle = !this.isShuffle;
-        this.shuffleBtn.classList.toggle('active', this.isShuffle);
-    }
-
-    toggleRepeat() {
-        this.repeatMode = (this.repeatMode + 1) % 3;
-        this.repeatBtn.classList.toggle('active', this.repeatMode > 0);
-
-        if (this.repeatMode === 2) {
-            this.repeatBtn.style.position = 'relative';
-        } else {
-            this.repeatBtn.style.position = '';
+        if (files.length > 0 && !this.currentTrack) {
+            this.loadTrack(0);
         }
     }
 
-    setVolume(value) {
-        this.audioPlayer.volume = value / 100;
-    }
+    loadTrack(index) {
+        if (index < 0 || index >= this.playlist.length) return;
 
-    seekMusic(e) {
-        const rect = this.musicProgress.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        this.audioPlayer.currentTime = percent * this.audioPlayer.duration;
-    }
+        this.currentTrack = index;
+        const track = this.playlist[index];
+        this.audioPlayer.src = track.url;
 
-    updateProgressThumb(e) {
-        const rect = this.musicProgress.getBoundingClientRect();
-        const percent = ((e.clientX - rect.left) / rect.width) * 100;
-        this.musicProgressThumb.style.left = `${Math.max(0, Math.min(100, percent))}%`;
-    }
-
-    updateMusicProgress() {
-        const { currentTime, duration } = this.audioPlayer;
-        if (duration) {
-            const percent = (currentTime / duration) * 100;
-            this.musicProgressFill.style.width = `${percent}%`;
-            this.currentTimeEl.textContent = this.formatTime(currentTime);
+        // Update track display
+        const selectedHeader = document.querySelector('.track-header.selected');
+        if (selectedHeader) {
+            const label = selectedHeader.querySelector('.track-number');
+            label.textContent = `TRACK: ${track.name.toUpperCase()}`;
         }
-    }
-
-    updateMusicDuration() {
-        this.durationEl.textContent = this.formatTime(this.audioPlayer.duration);
-    }
-
-    handleMusicEnd() {
-        if (this.repeatMode === 2) {
-            this.audioPlayer.currentTime = 0;
-            this.playMusic();
-        } else if (this.repeatMode === 1 || this.currentMusicIndex < this.musicPlaylist.length - 1) {
-            this.playNext();
-        } else {
-            this.pauseMusic();
-            this.audioPlayer.currentTime = 0;
-        }
-    }
-
-    // Video Player
-    loadVideo(index) {
-        if (index < 0 || index >= this.videoPlaylist.length) return;
-
-        const video = this.videoPlaylist[index];
-        this.videoPlayer.src = video.url;
-        this.updatePlaylistDisplay();
-        this.videoOverlay.style.opacity = '1';
-    }
-
-    toggleVideoPlay() {
-        if (this.videoPlayer.paused) {
-            this.playVideo();
-        } else {
-            this.pauseVideo();
-        }
-    }
-
-    playVideo() {
-        if (this.videoPlaylist.length === 0) return;
-        this.videoPlayer.play();
-        this.videoOverlay.style.opacity = '0';
-    }
-
-    pauseVideo() {
-        this.videoPlayer.pause();
-    }
-
-    updateVideoPlayState(playing) {
-        if (playing) {
-            this.videoPlayIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-            this.videoOverlay.style.opacity = '0';
-        } else {
-            this.videoPlayIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
-        }
-    }
-
-    playVideoPrevious() {
-        if (this.videoPlaylist.length === 0) return;
-
-        if (this.videoPlayer.currentTime > 3) {
-            this.videoPlayer.currentTime = 0;
-        } else {
-            this.currentVideoIndex = (this.currentVideoIndex - 1 + this.videoPlaylist.length) % this.videoPlaylist.length;
-            this.loadVideo(this.currentVideoIndex);
-            this.playVideo();
-        }
-    }
-
-    playVideoNext() {
-        if (this.videoPlaylist.length === 0) return;
-
-        this.currentVideoIndex = (this.currentVideoIndex + 1) % this.videoPlaylist.length;
-        this.loadVideo(this.currentVideoIndex);
-        this.playVideo();
-    }
-
-    toggleVideoMute() {
-        this.videoPlayer.muted = !this.videoPlayer.muted;
-        this.updateVolumeIcon();
-    }
-
-    setVideoVolume(value) {
-        this.videoPlayer.volume = value / 100;
-        this.videoPlayer.muted = value === 0;
-        this.updateVolumeIcon();
-    }
-
-    updateVolumeIcon() {
-        if (this.videoPlayer.muted || this.videoPlayer.volume === 0) {
-            this.videoVolumeIcon.innerHTML = `
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <line x1="23" y1="9" x2="17" y2="15"/>
-                <line x1="17" y1="9" x2="23" y2="15"/>
-            `;
-        } else {
-            this.videoVolumeIcon.innerHTML = `
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            `;
-        }
-    }
-
-    toggleFullscreen() {
-        const container = this.videoPlayer.closest('.video-container');
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            container.requestFullscreen();
-        }
-    }
-
-    seekVideo(e) {
-        const rect = this.videoProgress.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        this.videoPlayer.currentTime = percent * this.videoPlayer.duration;
-    }
-
-    updateVideoProgress() {
-        const { currentTime, duration } = this.videoPlayer;
-        if (duration) {
-            const percent = (currentTime / duration) * 100;
-            this.videoProgressFill.style.width = `${percent}%`;
-            this.videoCurrentTime.textContent = this.formatTime(currentTime);
-        }
-    }
-
-    updateVideoDuration() {
-        this.videoDuration.textContent = this.formatTime(this.videoPlayer.duration);
-    }
-
-    handleVideoEnd() {
-        if (this.currentVideoIndex < this.videoPlaylist.length - 1) {
-            this.playVideoNext();
-        } else {
-            this.videoOverlay.style.opacity = '1';
-        }
-    }
-
-    // Utility
-    formatTime(seconds) {
-        if (isNaN(seconds)) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    clearPlaylist() {
-        this.musicPlaylist.forEach(t => URL.revokeObjectURL(t.url));
-        this.videoPlaylist.forEach(v => URL.revokeObjectURL(v.url));
-
-        this.musicPlaylist = [];
-        this.videoPlaylist = [];
-        this.currentMusicIndex = -1;
-        this.currentVideoIndex = -1;
-
-        this.audioPlayer.src = '';
-        this.videoPlayer.src = '';
-
-        this.trackTitle.textContent = 'Selecciona una canción';
-        this.trackArtist.textContent = 'PinkWave Player';
-
-        this.updatePlaylistDisplay();
-        this.updateMusicProgress();
-        this.musicProgressFill.style.width = '0%';
-        this.currentTimeEl.textContent = '0:00';
-        this.durationEl.textContent = '0:00';
     }
 
     handleKeyboard(e) {
-        if (e.target.tagName === 'INPUT') return;
-
         switch(e.code) {
             case 'Space':
                 e.preventDefault();
-                if (this.musicSection.classList.contains('active')) {
-                    this.toggleMusicPlay();
-                } else {
-                    this.toggleVideoPlay();
-                }
+                this.togglePlay();
                 break;
-            case 'ArrowLeft':
-                e.preventDefault();
-                if (this.musicSection.classList.contains('active')) {
-                    this.audioPlayer.currentTime = Math.max(0, this.audioPlayer.currentTime - 5);
-                } else {
-                    this.videoPlayer.currentTime = Math.max(0, this.videoPlayer.currentTime - 5);
-                }
+            case 'Escape':
+                this.stop();
                 break;
-            case 'ArrowRight':
-                e.preventDefault();
-                if (this.musicSection.classList.contains('active')) {
-                    this.audioPlayer.currentTime = Math.min(this.audioPlayer.duration, this.audioPlayer.currentTime + 5);
-                } else {
-                    this.videoPlayer.currentTime = Math.min(this.videoPlayer.duration, this.videoPlayer.currentTime + 5);
-                }
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                if (this.musicSection.classList.contains('active')) {
-                    this.volumeSlider.value = Math.min(100, parseInt(this.volumeSlider.value) + 5);
-                    this.setVolume(this.volumeSlider.value);
-                } else {
-                    this.videoVolumeSlider.value = Math.min(100, parseInt(this.videoVolumeSlider.value) + 5);
-                    this.setVideoVolume(this.videoVolumeSlider.value);
-                }
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                if (this.musicSection.classList.contains('active')) {
-                    this.volumeSlider.value = Math.max(0, parseInt(this.volumeSlider.value) - 5);
-                    this.setVolume(this.volumeSlider.value);
-                } else {
-                    this.videoVolumeSlider.value = Math.max(0, parseInt(this.videoVolumeSlider.value) - 5);
-                    this.setVideoVolume(this.videoVolumeSlider.value);
-                }
-                break;
-            case 'KeyF':
-                if (this.videoSection.classList.contains('active')) {
-                    this.toggleFullscreen();
-                }
-                break;
-            case 'KeyM':
-                if (this.musicSection.classList.contains('active')) {
-                    this.toggleMusicPlay();
-                } else {
-                    this.toggleVideoMute();
-                }
+            case 'KeyL':
+                this.toggleLoop();
                 break;
         }
     }
+
+    startVisualizations() {
+        this.drawOscilloscope();
+        this.drawSpectrum();
+    }
+
+    drawOscilloscope() {
+        const canvas = this.oscCanvas;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const draw = () => {
+            requestAnimationFrame(draw);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = '#ff00ff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff00ff';
+            ctx.beginPath();
+
+            if (this.analyser) {
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                this.analyser.getByteTimeDomainData(dataArray);
+
+                const sliceWidth = width / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * height / 2;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                    x += sliceWidth;
+                }
+            } else {
+                // Demo wave when no audio
+                const time = Date.now() / 1000;
+                for (let x = 0; x < width; x++) {
+                    const y = height / 2 + Math.sin(x * 0.05 + time * 3) * 30 +
+                              Math.sin(x * 0.02 + time * 2) * 15;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+            }
+
+            ctx.stroke();
+        };
+
+        draw();
+    }
+
+    drawSpectrum() {
+        const canvas = this.spectrumCanvas;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const draw = () => {
+            requestAnimationFrame(draw);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            if (this.analyser) {
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                this.analyser.getByteFrequencyData(dataArray);
+
+                const barWidth = (width / bufferLength) * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * height;
+
+                    const gradient = ctx.createLinearGradient(0, height - barHeight, 0, height);
+                    gradient.addColorStop(0, '#ff00ff');
+                    gradient.addColorStop(0.5, '#ff1493');
+                    gradient.addColorStop(1, '#ff00aa');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = '#ff00ff';
+
+                    x += barWidth;
+                }
+            } else {
+                // Demo spectrum
+                const time = Date.now() / 1000;
+                const bars = 40;
+                const barWidth = width / bars;
+
+                for (let i = 0; i < bars; i++) {
+                    const barHeight = (Math.sin(i * 0.3 + time * 2) * 0.5 + 0.5) * height * 0.8 +
+                                      Math.random() * height * 0.1;
+
+                    const gradient = ctx.createLinearGradient(0, height - barHeight, 0, height);
+                    gradient.addColorStop(0, '#ff00ff');
+                    gradient.addColorStop(1, '#ff00aa');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(i * barWidth, height - barHeight, barWidth - 2, barHeight);
+                }
+            }
+        };
+
+        draw();
+    }
+
+    animateMeters() {
+        const meters = document.querySelectorAll('.meter-l, .meter-r');
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            meters.forEach(meter => {
+                if (this.isPlaying) {
+                    const level = Math.random() * 35 + 5;
+                    meter.style.setProperty('--level', `${100 - level}%`);
+                }
+            });
+        };
+
+        animate();
+    }
 }
 
-// Initialize player when DOM is ready
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    window.pinkWavePlayer = new PinkWavePlayer();
+    window.neonWavePlayer = new NeonWavePlayer();
 });
