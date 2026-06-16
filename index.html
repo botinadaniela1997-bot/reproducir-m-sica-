@@ -3,227 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PinkWave - Reproductor de Música y Video</title>
+    <title>NEON WAVE v5.2 - Audio Workstation</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 18V5l12-2v13"/>
-                    <circle cx="6" cy="18" r="3"/>
-                    <circle cx="18" cy="16" r="3"/>
-                </svg>
-                <span class="logo-text">PinkWave</span>
+        <!-- Top Bar - Transport & Info -->
+        <header class="top-bar">
+            <div class="logo-section">
+                <span class="logo-text">NEON WAVE</span>
+                <span class="version">v5.2</span>
             </div>
 
-            <nav class="nav-menu">
-                <button class="nav-btn active" data-section="music">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18V5l12-2v13"/>
-                        <circle cx="6" cy="18" r="3"/>
-                        <circle cx="18" cy="16" r="3"/>
-                    </svg>
-                    <span>Música</span>
+            <div class="transport-controls">
+                <button class="transport-btn play" id="transportPlay" title="Play">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>PLAY</span>
                 </button>
-                <button class="nav-btn" data-section="video">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span>Video</span>
+                <button class="transport-btn stop" id="transportStop" title="Stop">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+                    <span>STOP</span>
                 </button>
-            </nav>
-
-            <div class="playlist-section">
-                <h3>Lista de Reproducción</h3>
-                <div id="playlist" class="playlist-container">
-                    <p class="empty-message">Arrastra archivos aquí</p>
-                </div>
-                <button id="clearPlaylist" class="clear-btn">Limpiar Lista</button>
+                <button class="transport-btn rec" id="transportRec" title="Record">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+                    <span>REC</span>
+                </button>
+                <button class="transport-btn loop" id="transportLoop" title="Loop">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    <span>LOOP</span>
+                </button>
             </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Music Section -->
-            <section id="musicSection" class="content-section active">
-                <div class="drop-zone" id="musicDropZone">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <h2>Arrastra tus archivos de música</h2>
-                    <p>o haz clic para seleccionar</p>
-                    <input type="file" id="musicInput" accept="audio/*" multiple hidden>
+            <div class="time-display">
+                <div class="time-code" id="timeCode">00:01:24:18</div>
+                <div class="tempo-section">
+                    <span class="label">BPM</span>
+                    <span class="bpm-value" id="bpmValue">128.0</span>
                 </div>
+            </div>
 
-                <div class="player-display">
-                    <div class="album-art" id="albumArt">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18V5l12-2v13"/>
-                            <circle cx="6" cy="18" r="3"/>
-                            <circle cx="18" cy="16" r="3"/>
-                        </svg>
-                    </div>
-                    <div class="track-info">
-                        <h3 id="trackTitle">Selecciona una canción</h3>
-                        <p id="trackArtist">PinkWave Player</p>
-                    </div>
-                </div>
+            <div class="top-right-controls">
+                <button class="icon-btn" title="Mixer View" onclick="toggleSection('mixer')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+                </button>
+                <button class="icon-btn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </div>
+        </header>
 
-                <div class="music-player">
-                    <div class="progress-container">
-                        <span id="currentTime">0:00</span>
-                        <div class="progress-bar" id="musicProgress">
-                            <div class="progress-fill" id="musicProgressFill"></div>
-                            <div class="progress-thumb" id="musicProgressThumb"></div>
+        <!-- Main Area -->
+        <div class="main-area">
+            <!-- Left Panel - Projects & Plugins -->
+            <aside class="left-panel">
+                <div class="panel-section projects-section">
+                    <h3 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        PROJECTS
+                    </h3>
+                    <div class="tree-view" id="projectTree">
+                        <div class="tree-item active">
+                            <span class="tree-icon folder"></span>
+                            <span>NEON WAVE</span>
                         </div>
-                        <span id="duration">0:00</span>
-                    </div>
-
-                    <div class="controls">
-                        <button class="control-btn" id="shuffleBtn" title="Aleatorio">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="16 3 21 3 21 8"/>
-                                <line x1="4" y1="20" x2="21" y2="3"/>
-                                <polyline points="21 16 21 21 16 21"/>
-                                <line x1="15" y1="15" x2="21" y2="21"/>
-                                <line x1="4" y1="4" x2="9" y2="9"/>
-                            </svg>
-                        </button>
-                        <button class="control-btn" id="prevBtn" title="Anterior">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="19 20 9 12 19 4 19 20"/>
-                                <line x1="5" y1="19" x2="5" y2="5"/>
-                            </svg>
-                        </button>
-                        <button class="control-btn play-btn" id="playBtn" title="Reproducir">
-                            <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon">
-                                <polygon points="5 3 19 12 5 21 5 3"/>
-                            </svg>
-                        </button>
-                        <button class="control-btn" id="nextBtn" title="Siguiente">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="5 4 15 12 5 20 5 4"/>
-                                <line x1="19" y1="5" x2="19" y2="19"/>
-                            </svg>
-                        </button>
-                        <button class="control-btn" id="repeatBtn" title="Repetir">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="17 1 21 5 17 9"/>
-                                <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-                                <polyline points="7 23 3 19 7 15"/>
-                                <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="volume-control">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                        </svg>
-                        <div class="volume-slider">
-                            <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                        <div class="tree-item">
+                            <span class="tree-icon folder"></span>
+                            <span>PROJECTS</span>
+                        </div>
+                        <div class="tree-item">
+                            <span class="tree-icon folder"></span>
+                            <span>TRACKS</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 9</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TBACK 10</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 12</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 14</span>
+                        </div>
+                        <div class="tree-item">
+                            <span class="tree-icon folder"></span>
+                            <span>PLUGIN</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 28</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 50</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>TRACK 51</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon file"></span>
+                            <span>PLUCK S 12</span>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Video Section -->
-            <section id="videoSection" class="content-section">
-                <div class="drop-zone" id="videoDropZone">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-                        <line x1="7" y1="2" x2="7" y2="22"/>
-                        <line x1="17" y1="2" x2="17" y2="22"/>
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <line x1="2" y1="7" x2="22" y2="7"/>
-                        <line x1="2" y1="17" x2="22" y2="17"/>
-                    </svg>
-                    <h2>Arrastra tus archivos de video</h2>
-                    <p>o haz clic para seleccionar</p>
-                    <input type="file" id="videoInput" accept="video/*" multiple hidden>
+                <div class="panel-section plugins-section">
+                    <h3 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        PLUGINS
+                    </h3>
+                    <div class="tree-view" id="pluginTree">
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>PINK SYNTH PRO</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>PINK SYNTH PRO</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>PINK SYNTH PRO</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>PINK SYNTH PRO 150</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>STAVORONINO</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>SUBBASS SONGS</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>DBEARR</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>SERENUM</span>
+                        </div>
+                        <div class="tree-item sub">
+                            <span class="tree-icon plugin"></span>
+                            <span>REAQNTE</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center - Sequencer & Tracks -->
+            <main class="center-panel">
+                <!-- Track Headers -->
+                <div class="tracks-header">
+                    <div class="track-header" data-track="1">
+                        <span class="track-number">TRACK 1: BEATS</span>
+                        <div class="track-controls">
+                            <button class="track-btn mute">M</button>
+                            <button class="track-btn solo">S</button>
+                            <span class="track-level">1</span>
+                        </div>
+                    </div>
+                    <div class="track-header" data-track="2">
+                        <span class="track-number">TRACK 2: BASS</span>
+                        <div class="track-controls">
+                            <button class="track-btn mute">M</button>
+                            <button class="track-btn solo">S</button>
+                            <span class="track-level">1</span>
+                        </div>
+                    </div>
+                    <div class="track-header selected" data-track="3">
+                        <span class="track-number">TRACK 3: LEAD</span>
+                        <div class="track-controls">
+                            <button class="track-btn mute">M</button>
+                            <button class="track-btn solo">S</button>
+                            <span class="track-level">3</span>
+                        </div>
+                    </div>
+                    <div class="track-header" data-track="4">
+                        <span class="track-number">TRACK 4: FX</span>
+                        <div class="track-controls">
+                            <button class="track-btn mute">M</button>
+                            <button class="track-btn solo">S</button>
+                            <span class="track-level">3</span>
+                        </div>
+                    </div>
+                    <div class="track-header" data-track="5">
+                        <span class="track-number">TRACK 5: VOCAL</span>
+                        <div class="track-controls">
+                            <button class="track-btn mute">M</button>
+                            <button class="track-btn solo">S</button>
+                            <span class="track-level">3</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="video-container">
-                    <video id="videoPlayer" class="video-player">
-                        Tu navegador no soporta video.
-                    </video>
-
-                    <div class="video-overlay" id="videoOverlay">
-                        <button class="big-play-btn" id="bigPlayBtn">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <polygon points="5 3 19 12 5 21 5 3"/>
-                            </svg>
-                        </button>
+                <!-- Timeline / Sequencer -->
+                <div class="sequencer-area">
+                    <div class="timeline-ruler" id="timelineRuler">
+                        <div class="ruler-marks">
+                            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+                            <span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+                            <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span>
+                            <span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
+                        </div>
+                        <div class="playhead" id="playhead"></div>
                     </div>
 
-                    <div class="video-controls">
-                        <div class="video-progress-container">
-                            <div class="video-progress-bar" id="videoProgress">
-                                <div class="video-progress-fill" id="videoProgressFill"></div>
+                    <div class="tracks-grid">
+                        <div class="track-row" data-track="1">
+                            <div class="track-block beats">
+                                <span class="block-label">TRACK1: BEATS</span>
+                                <div class="midi-dots"></div>
                             </div>
                         </div>
+                        <div class="track-row" data-track="2">
+                            <div class="track-block bass">
+                                <span class="block-label">TRACK2: BASS</span>
+                                <div class="midi-dots"></div>
+                            </div>
+                        </div>
+                        <div class="track-row" data-track="3">
+                            <div class="track-block lead">
+                                <span class="block-label">TRACK3: LEAD</span>
+                                <div class="midi-dots"></div>
+                            </div>
+                        </div>
+                        <div class="track-row" data-track="4">
+                            <div class="track-block fx">
+                                <span class="block-label">TRACK4: FX</span>
+                                <div class="waveform"></div>
+                            </div>
+                        </div>
+                        <div class="track-row" data-track="5">
+                            <div class="track-block vocal">
+                                <span class="block-label">TRACK5: VOCAL</span>
+                                <div class="waveform"></div>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="video-controls-row">
-                            <div class="video-controls-left">
-                                <button class="control-btn" id="videoPlayBtn" title="Reproducir">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" id="videoPlayIcon">
-                                        <polygon points="5 3 19 12 5 21 5 3"/>
-                                    </svg>
-                                </button>
-                                <button class="control-btn" id="videoPrevBtn" title="Anterior">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polygon points="19 20 9 12 19 4 19 20"/>
-                                        <line x1="5" y1="19" x2="5" y2="5"/>
-                                    </svg>
-                                </button>
-                                <button class="control-btn" id="videoNextBtn" title="Siguiente">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polygon points="5 4 15 12 5 20 5 4"/>
-                                        <line x1="19" y1="5" x2="19" y2="19"/>
-                                    </svg>
-                                </button>
+                    <div class="drop-zone-seq" id="dropZoneSeq">
+                        <span>Arrastra archivos de audio aquí</span>
+                        <input type="file" id="audioInput" accept="audio/*" multiple hidden>
+                    </div>
+                </div>
+            </main>
 
-                                <div class="video-volume">
-                                    <button class="control-btn" id="videoMuteBtn" title="Silenciar">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="videoVolumeIcon">
-                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                                        </svg>
-                                    </button>
-                                    <input type="range" id="videoVolumeSlider" min="0" max="100" value="80">
+            <!-- Synth Popup -->
+            <div class="synth-popup" id="synthPopup">
+                <div class="synth-header">
+                    <span class="synth-title">PINK SYNTH PRO</span>
+                    <div class="synth-header-btns">
+                        <span class="preset-name">Oscillator</span>
+                        <button class="synth-close" id="synthClose">×</button>
+                    </div>
+                </div>
+                <div class="synth-body">
+                    <div class="synth-left">
+                        <div class="knob-group">
+                            <div class="knob">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">OSC</span>
+                            </div>
+                            <div class="knob large">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">CUTOFF</span>
+                            </div>
+                        </div>
+                        <div class="knob-group">
+                            <div class="knob">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">OSC</span>
+                            </div>
+                            <div class="knob large">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">CUTOFF</span>
+                            </div>
+                        </div>
+                        <div class="knob-row">
+                            <div class="knob small">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">REG</span>
+                            </div>
+                            <div class="knob small">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">RESONANCE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="synth-center">
+                        <div class="oscilloscope" id="oscilloscope">
+                            <canvas id="oscCanvas" width="280" height="120"></canvas>
+                        </div>
+                        <div class="wave-selector">
+                            <button class="wave-btn active" data-wave="sine">1</button>
+                            <button class="wave-btn" data-wave="square">2</button>
+                            <button class="wave-btn" data-wave="saw">3</button>
+                            <button class="wave-btn" data-wave="triangle">4</button>
+                            <button class="wave-btn" data-wave="pulse">O1</button>
+                            <button class="wave-btn" data-wave="noise">O2</button>
+                        </div>
+                    </div>
+                    <div class="synth-right">
+                        <div class="env-group">
+                            <div class="env-section">
+                                <span class="env-label">ENV</span>
+                                <div class="env-controls">
+                                    <button class="env-btn">REVIRG</button>
+                                    <button class="env-btn">ENV</button>
+                                    <button class="env-btn">LFO</button>
                                 </div>
-
-                                <span class="video-time">
-                                    <span id="videoCurrentTime">0:00</span> / <span id="videoDuration">0:00</span>
-                                </span>
                             </div>
-
-                            <div class="video-controls-right">
-                                <button class="control-btn" id="fullscreenBtn" title="Pantalla completa">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="15 3 21 3 21 9"/>
-                                        <polyline points="9 21 3 21 3 15"/>
-                                        <line x1="21" y1="3" x2="14" y2="10"/>
-                                        <line x1="3" y1="21" x2="10" y2="14"/>
-                                    </svg>
-                                </button>
+                            <div class="env-section">
+                                <span class="env-label">LFO</span>
+                                <div class="env-controls">
+                                    <button class="env-btn">SEBET</button>
+                                    <button class="env-btn">GNDI</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="env-knobs">
+                            <div class="knob small">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">ENV</span>
+                            </div>
+                            <div class="knob small">
+                                <div class="knob-ring"></div>
+                                <span class="knob-label">LFO</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
+            </div>
+        </div>
+
+        <!-- Bottom - Mixer -->
+        <div class="mixer-panel" id="mixerPanel">
+            <div class="mixer-header">
+                <span class="mixer-title">MIXER</span>
+                <div class="mixer-tabs">
+                    <button class="mixer-tab active">AUDRS</button>
+                    <button class="mixer-tab">TMICS 1</button>
+                    <button class="mixer-tab">SEND 1</button>
+                </div>
+            </div>
+            <div class="mixer-channels">
+                <div class="channel" data-channel="1">
+                    <span class="channel-name">TRACK 1</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="75" orient="vertical">
+                    </div>
+                    <div class="channel-label">TRACK 4</div>
+                </div>
+                <div class="channel" data-channel="2">
+                    <span class="channel-name">TRACK 2</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="80" orient="vertical">
+                    </div>
+                    <div class="channel-label">BASS</div>
+                </div>
+                <div class="channel" data-channel="3">
+                    <span class="channel-name">TRACK 3</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="70" orient="vertical">
+                    </div>
+                    <div class="channel-label">LEAD 3</div>
+                </div>
+                <div class="channel" data-channel="4">
+                    <span class="channel-name">TRACK 4</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="65" orient="vertical">
+                    </div>
+                    <div class="channel-label">TRASK 4</div>
+                </div>
+                <div class="channel" data-channel="5">
+                    <span class="channel-name">TRACK 5</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="85" orient="vertical">
+                    </div>
+                    <div class="channel-label">FX</div>
+                </div>
+                <div class="channel" data-channel="6">
+                    <span class="channel-name">TRACK 5</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="60" orient="vertical">
+                    </div>
+                    <div class="channel-label">TRACK 0</div>
+                </div>
+                <div class="channel" data-channel="7">
+                    <span class="channel-name">TRACK 5</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="90" orient="vertical">
+                    </div>
+                    <div class="channel-label">TRACK 5</div>
+                </div>
+                <div class="channel" data-channel="8">
+                    <span class="channel-name">TRACK 5</span>
+                    <div class="channel-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="72" orient="vertical">
+                    </div>
+                    <div class="channel-label">VOCAL</div>
+                </div>
+
+                <!-- Master -->
+                <div class="channel master">
+                    <span class="channel-name">MASTER</span>
+                    <div class="channel-meters master-meters">
+                        <div class="meter-l"></div>
+                        <div class="meter-r"></div>
+                    </div>
+                    <div class="fader-container">
+                        <input type="range" class="fader" min="0" max="100" value="80" orient="vertical">
+                    </div>
+                    <div class="channel-label">STEREO</div>
+                </div>
+            </div>
+
+            <!-- Spectrum Analyzer -->
+            <div class="spectrum-section">
+                <h4 class="spectrum-title">SPECTRUM ANALYZER</h4>
+                <div class="spectrum-analyzer" id="spectrumAnalyzer">
+                    <canvas id="spectrumCanvas" width="400" height="120"></canvas>
+                    <div class="spectrum-labels">
+                        <span>10</span><span>20</span><span>50</span><span>100k</span><span>20k</span><span>50k</span><span>100k</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Player (hidden) -->
+        <audio id="audioPlayer"></audio>
     </div>
 
-    <audio id="audioPlayer"></audio>
     <script src="script.js"></script>
 </body>
 </html>
