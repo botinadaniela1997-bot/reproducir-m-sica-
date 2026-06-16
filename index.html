@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PinkWave - Reproductor de MÃºsica y Video</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"/>
+                    <circle cx="6" cy="18" r="3"/>
+                    <circle cx="18" cy="16" r="3"/>
+                </svg>
+                <span class="logo-text">PinkWave</span>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-section="music">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    <span>MÃºsica</span>
+                </button>
+                <button class="nav-btn" data-section="video">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <span>Video</span>
+                </button>
+            </nav>
+
+            <div class="playlist-section">
+                <h3>Lista de ReproducciÃ³n</h3>
+                <div id="playlist" class="playlist-container">
+                    <p class="empty-message">Arrastra archivos aquÃ­</p>
+                </div>
+                <button id="clearPlaylist" class="clear-btn">Limpiar Lista</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Music Section -->
+            <section id="musicSection" class="content-section active">
+                <div class="drop-zone" id="musicDropZone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <h2>Arrastra tus archivos de mÃºsica</h2>
+                    <p>o haz clic para seleccionar</p>
+                    <input type="file" id="musicInput" accept="audio/*" multiple hidden>
+                </div>
+
+                <div class="player-display">
+                    <div class="album-art" id="albumArt">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="16" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="track-info">
+                        <h3 id="trackTitle">Selecciona una canciÃ³n</h3>
+                        <p id="trackArtist">PinkWave Player</p>
+                    </div>
+                </div>
+
+                <div class="music-player">
+                    <div class="progress-container">
+                        <span id="currentTime">0:00</span>
+                        <div class="progress-bar" id="musicProgress">
+                            <div class="progress-fill" id="musicProgressFill"></div>
+                            <div class="progress-thumb" id="musicProgressThumb"></div>
+                        </div>
+                        <span id="duration">0:00</span>
+                    </div>
+
+                    <div class="controls">
+                        <button class="control-btn" id="shuffleBtn" title="Aleatorio">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 3 21 3 21 8"/>
+                                <line x1="4" y1="20" x2="21" y2="3"/>
+                                <polyline points="21 16 21 21 16 21"/>
+                                <line x1="15" y1="15" x2="21" y2="21"/>
+                                <line x1="4" y1="4" x2="9" y2="9"/>
+                            </svg>
+                        </button>
+                        <button class="control-btn" id="prevBtn" title="Anterior">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="19 20 9 12 19 4 19 20"/>
+                                <line x1="5" y1="19" x2="5" y2="5"/>
+                            </svg>
+                        </button>
+                        <button class="control-btn play-btn" id="playBtn" title="Reproducir">
+                            <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                        </button>
+                        <button class="control-btn" id="nextBtn" title="Siguiente">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 4 15 12 5 20 5 4"/>
+                                <line x1="19" y1="5" x2="19" y2="19"/>
+                            </svg>
+                        </button>
+                        <button class="control-btn" id="repeatBtn" title="Repetir">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="17 1 21 5 17 9"/>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                                <polyline points="7 23 3 19 7 15"/>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="volume-control">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        </svg>
+                        <div class="volume-slider">
+                            <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Section -->
+            <section id="videoSection" class="content-section">
+                <div class="drop-zone" id="videoDropZone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                        <line x1="7" y1="2" x2="7" y2="22"/>
+                        <line x1="17" y1="2" x2="17" y2="22"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <line x1="2" y1="7" x2="22" y2="7"/>
+                        <line x1="2" y1="17" x2="22" y2="17"/>
+                    </svg>
+                    <h2>Arrastra tus archivos de video</h2>
+                    <p>o haz clic para seleccionar</p>
+                    <input type="file" id="videoInput" accept="video/*" multiple hidden>
+                </div>
+
+                <div class="video-container">
+                    <video id="videoPlayer" class="video-player">
+                        Tu navegador no soporta video.
+                    </video>
+
+                    <div class="video-overlay" id="videoOverlay">
+                        <button class="big-play-btn" id="bigPlayBtn">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="video-controls">
+                        <div class="video-progress-container">
+                            <div class="video-progress-bar" id="videoProgress">
+                                <div class="video-progress-fill" id="videoProgressFill"></div>
+                            </div>
+                        </div>
+
+                        <div class="video-controls-row">
+                            <div class="video-controls-left">
+                                <button class="control-btn" id="videoPlayBtn" title="Reproducir">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" id="videoPlayIcon">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                </button>
+                                <button class="control-btn" id="videoPrevBtn" title="Anterior">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="19 20 9 12 19 4 19 20"/>
+                                        <line x1="5" y1="19" x2="5" y2="5"/>
+                                    </svg>
+                                </button>
+                                <button class="control-btn" id="videoNextBtn" title="Siguiente">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 4 15 12 5 20 5 4"/>
+                                        <line x1="19" y1="5" x2="19" y2="19"/>
+                                    </svg>
+                                </button>
+
+                                <div class="video-volume">
+                                    <button class="control-btn" id="videoMuteBtn" title="Silenciar">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="videoVolumeIcon">
+                                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                        </svg>
+                                    </button>
+                                    <input type="range" id="videoVolumeSlider" min="0" max="100" value="80">
+                                </div>
+
+                                <span class="video-time">
+                                    <span id="videoCurrentTime">0:00</span> / <span id="videoDuration">0:00</span>
+                                </span>
+                            </div>
+
+                            <div class="video-controls-right">
+                                <button class="control-btn" id="fullscreenBtn" title="Pantalla completa">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <polyline points="9 21 3 21 3 15"/>
+                                        <line x1="21" y1="3" x2="14" y2="10"/>
+                                        <line x1="3" y1="21" x2="10" y2="14"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+    <script src="script.js"></script>
+</body>
+</html>
